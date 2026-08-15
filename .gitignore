@@ -1,0 +1,6 @@
+gitignore
+youtubecast.lock
+cron.log
+venv/
+podcasts/
+config.toml
