@@ -41,7 +41,7 @@ MIME_TYPES = {
 def log(msg):
     print(f"{datetime.now():%Y-%m-%d %H:%M:%S} {msg}", flush=True)
 
-def log_next_schedule(crontab_path="/etc/crontabs/root"):
+def get_next_schedule(crontab_path="/etc/crontabs/root"):
     now = datetime.now()
     earliest_time = None
     earliest_command = None
@@ -68,11 +68,11 @@ def log_next_schedule(crontab_path="/etc/crontabs/root"):
                         earliest_time = next_run
                         earliest_command = command
                 else:
-                    log(f"[Crontab] Wrong cron expression: {cron_expr}")
+                    log(f"[app] wrong cron expression: {cron_expr}")
     if earliest_time and earliest_command:
-        log(f"[Crontab] Next scheduled job:{earliest_time.strftime('%Y-%m-%d %H:%M:%S')}, COMMAND: {earliest_command}")
+        log(f"[app] next scheduled job:{earliest_time.strftime('%Y-%m-%d %H:%M:%S')}, COMMAND: {earliest_command}")
     else:
-        log(f"[Crontab] No valid scheduled jobs found")
+        log(f"[app] no valid scheduled jobs found")
 
 def is_playlist(url):
     return "playlist?list=" in url
@@ -89,7 +89,7 @@ def list_entries(url):
     """Flat-extract video entries without downloading. Returns [] of dicts with at least 'id'."""
     opts = {
         "extract_flat": "in_playlist",
-        "quiet": True,
+        "quiet": False,
         "no_warnings": True,
     }
     if not is_playlist(url):
@@ -139,9 +139,9 @@ def download_episode(folder, video_id, lang=None, pubdate="upload"):
         "outtmpl": str(folder / "%(id)s.%(ext)s"),
         "writethumbnail": True,
         "postprocessors": [{"key": "FFmpegThumbnailsConvertor", "format": "jpg"}],
-        "quiet": True,
+        "quiet": False,
         "no_warnings": True,
-        "noprogress": True,
+        "noprogress": False,
     }
     if lang:
         opts["extractor_args"] = {"youtube": {"lang": [lang]}}
@@ -220,10 +220,10 @@ def write_feed(folder, podcast, base_url, episodes):
 
 
 def process_podcast(podcast, config):
-    log(f"[{podcast['folder']}] is on process...")
+    log(f"[{podcast['folder']}] is on process")
     folder = Path(config["root"]) / podcast["folder"]
     folder.mkdir(parents=True, exist_ok=True)
-    log(f"[{podcast['folder']}] loading the videolists") 
+    log(f"[{podcast['folder']}] loading episodes") 
     backlog = podcast.get("backlog", config.get("backlog", 1))
 
     backlog_order = podcast.get("backlog_order", config.get("backlog_order", "desc"))
@@ -265,19 +265,21 @@ def process_podcast(podcast, config):
             log(f"[{podcast['folder']}] FAILED {entry['id']}: {e}")
 
     if added or not (folder / "channel.xml").exists():
-        log(f"[{podcast['folder']}] feed updating...")
+        log(f"[{podcast['folder']}] feed updating")
         write_feed(folder, podcast, config["base_url"], episodes)
         log(f"[{podcast['folder']}] feed updated, {len(episodes)} episode(s)")
 
 
 def main():
+    log("[app] job starting")
     lock = open(SCRIPT_DIR / "youtubecast.lock", "w")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
-        log("another instance is running, exiting")
+        log("[app] another instance is running, exiting")
         return 0
 
+    log("[app] loading config")
     with open(SCRIPT_DIR / "config.toml", "rb") as f:
         config = tomllib.load(f)
 
@@ -289,9 +291,9 @@ def main():
             failures += 1
             log(f"[{podcast['folder']}] ERROR: {type(e).__name__}: {e}")
 
-    log_next_schedule()
+    get_next_schedule()
 
-    log("Work finished!")
+    log("[app] job finished, exiting the instance")
 
     return 1 if failures else 0
 
