@@ -203,7 +203,7 @@ def write_feed(folder, podcast, base_url, episodes):
 
 
 def process_podcast(podcast, config):
-    log(f"[{podcast['folder']}] is processing")
+    log(f"[{podcast['folder']}] is on process...")
     folder = Path(config["root"]) / podcast["folder"]
     folder.mkdir(parents=True, exist_ok=True)
     log(f"[{podcast['folder']}] loading the videolists") 
@@ -248,7 +248,7 @@ def process_podcast(podcast, config):
             log(f"[{podcast['folder']}] FAILED {entry['id']}: {e}")
 
     if added or not (folder / "channel.xml").exists():
-        log(f"[{podcasst['folder]}] feed updating...")
+        log(f"[{podcast['folder']}] feed updating...")
         write_feed(folder, podcast, config["base_url"], episodes)
         log(f"[{podcast['folder']}] feed updated, {len(episodes)} episode(s)")
 
