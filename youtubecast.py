@@ -42,12 +42,31 @@ def log(msg):
     print(f"{datetime.now():%Y-%m-%d %H:%M:%S} {msg}", flush=True)
 
 def log_next_schedule(crontab_path="/etc/crontabs/root"):
-    try:
-        cron = croniter.croniter(crontab_path, datetime.now())
-        next_run = cron.get_next(datetime)
-        log(f"[NEXT SCHEDULE] Next run at: {next_run}")
-    except Exception as e:
-        log(f"[NEXT SCHEDULE] Failed to parse cron '{cron_expr}': {e}")
+    now = datetime.now()
+    with open(crontab_path, 'r', encoding='utf-8') as file:
+        for line_num, line in enumerate(file, 1):
+            line = line.strip()
+            
+            # 빈 줄이나 주석(#), 환경변수 설정(ENV=...) 제외
+            if not line or line.startswith('#') or '=' in line.split()[0]:
+                continue
+            
+            parts = line.split()
+            
+            # 일반적인 5자리 크론 표현식 (분 시 일 월 요일)
+            if len(parts) >= 6:
+                cron_expr = " ".join(parts[:5])
+                command = " ".join(parts[5:])
+                
+                # 크론 표현식 유효성 검사
+                if croniter.is_valid(cron_expr):
+                    cron = croniter(cron_expr, now)
+                    next_run = cron.get_next(datetime)
+                    
+                    log(f"[cron scheduler] Next run {next_run.strftime('%Y-%m-%d %H:%M:%S')}")
+                    log(f"scheduled command: {command}\n")
+                else:
+                    log(f"[cron scheduler] wrong cron expression: {cron_expr}\n")
 
 def is_playlist(url):
     return "playlist?list=" in url
