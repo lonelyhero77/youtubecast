@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import yt_dlp
-import croniter
+from croniter import croniter
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
