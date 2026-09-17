@@ -1,0 +1,21 @@
+services:
+  youtubecast:
+    image: youtubecast:latest
+    container_name: youtubecast
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Seoul
+    volumes:
+      - ./config.toml:/app/config.toml:ro
+      - ./podcasts:/app/podcasts
+      - ./crontab:/app/crontab:ro
+
+  # (선택 사항) 생성된 팟캐스트 피드 및 오디오 파일을 웹으로 호스팅할 웹서버
+  # web:
+  #   image: nginx:alpine
+  #   container_name: youtubecast-web
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./podcasts:/usr/share/nginx/html:ro
