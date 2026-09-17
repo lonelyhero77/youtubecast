@@ -70,7 +70,7 @@ def log_next_schedule(crontab_path="/etc/crontabs/root"):
                 else:
                     log(f"[Crontab] Wrong cron expression: {cron_expr}")
     if earliest_time and earliest_command:
-        log(f"[Crontab] Next scheduled job:{earliest_time.strfttime('%Y-%m-%d %H:%M:%S')}, COMMAND: {earliest_command}")
+        log(f"[Crontab] Next scheduled job:{earliest_time.strftime('%Y-%m-%d %H:%M:%S')}, COMMAND: {earliest_command}")
     else:
         log(f"[Crontab] No valid scheduled jobs found")
 
