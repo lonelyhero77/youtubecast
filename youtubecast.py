@@ -68,11 +68,11 @@ def get_next_schedule(crontab_path="/etc/crontabs/root"):
                         earliest_time = next_run
                         earliest_command = command
                 else:
-                    log(f"[app] wrong cron expression: {cron_expr}")
+                    log(f"wrong cron expression: {cron_expr}")
     if earliest_time and earliest_command:
-        log(f"[app] next scheduled job:{earliest_time.strftime('%Y-%m-%d %H:%M:%S')}, COMMAND: {earliest_command}")
+        log(f"next scheduled job: {earliest_time.strftime('%Y-%m-%d %H:%M:%S')}, COMMAND: {earliest_command}")
     else:
-        log(f"[app] no valid scheduled jobs found")
+        log(f"no valid scheduled jobs found")
 
 def is_playlist(url):
     return "playlist?list=" in url
@@ -137,7 +137,7 @@ def download_episode(folder, video_id, lang=None, pubdate="upload"):
     opts = {
         "format": "bestaudio[ext=m4a]/bestaudio",
         "outtmpl": str(folder / "%(id)s.%(ext)s"),
-        "writethumbnail": False,
+        "writethumbnail": True,
         "postprocessors": [{"key": "FFmpegThumbnailsConvertor", "format": "jpg"}],
         "quiet": True,
         "no_warnings": True,
@@ -220,7 +220,7 @@ def write_feed(folder, podcast, base_url, episodes):
 
 
 def process_podcast(podcast, config):
-    log(f"[{podcast['folder']}] is on process")
+    log(f"[{podcast['folder']}] selected")
     folder = Path(config["root"]) / podcast["folder"]
     folder.mkdir(parents=True, exist_ok=True)
     log(f"[{podcast['folder']}] loading episodes") 
@@ -265,21 +265,19 @@ def process_podcast(podcast, config):
             log(f"[{podcast['folder']}] FAILED {entry['id']}: {e}")
 
     if added or not (folder / "channel.xml").exists():
-        log(f"[{podcast['folder']}] feed updating")
         write_feed(folder, podcast, config["base_url"], episodes)
         log(f"[{podcast['folder']}] feed updated, {len(episodes)} episode(s)")
 
 
 def main():
-    log("[app] job starting")
+    log("job starting")
     lock = open(SCRIPT_DIR / "youtubecast.lock", "w")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
-        log("[app] another instance is running, exiting")
+        log("another instance is running, exiting")
         return 0
-
-    log("[app] loading config")
+    
     with open(SCRIPT_DIR / "config.toml", "rb") as f:
         config = tomllib.load(f)
 
@@ -293,7 +291,7 @@ def main():
 
     get_next_schedule()
 
-    log("[app] job finished, exiting the instance")
+    log("job finished, exiting the instance")
 
     return 1 if failures else 0
 
