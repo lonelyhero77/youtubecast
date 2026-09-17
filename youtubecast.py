@@ -62,11 +62,15 @@ def log_next_schedule(crontab_path="/etc/crontabs/root"):
                 if croniter.is_valid(cron_expr):
                     cron = croniter(cron_expr, now)
                     next_run = cron.get_next(datetime)
-                    
-                    log(f"[cron scheduler] Next run {next_run.strftime('%Y-%m-%d %H:%M:%S')}")
-                    log(f"scheduled command: {command}\n")
+                    if earliest_time is None or next_run < earliest_time:
+                        earliest_time = next_run
+                        earliest_command = command
                 else:
-                    log(f"[cron scheduler] wrong cron expression: {cron_expr}\n")
+                    log(f"[Crontab] Wrong cron expression: {cron_expr}")
+    if earliest_time and earliest_command:
+        log(f"[Crontab] Next scheduled job:{earliest_time.strfttime('%Y-%m-%d %H:%M:%S')}, COMMAND: {earliest_command}")
+    else:
+        log(f"[Crontab] No valid scheduled jobs found")
 
 def is_playlist(url):
     return "playlist?list=" in url
@@ -284,6 +288,8 @@ def main():
             log(f"[{podcast['folder']}] ERROR: {type(e).__name__}: {e}")
 
     log_next_schedule()
+
+    log("Work finished!")
 
     return 1 if failures else 0
 
