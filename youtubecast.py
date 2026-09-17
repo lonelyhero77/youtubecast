@@ -42,20 +42,12 @@ def log(msg):
     print(f"{datetime.now():%Y-%m-%d %H:%M:%S} {msg}", flush=True)
 
 def log_next_schedule(crontab_path="/etc/crontabs/root"):
-    now = datetime.now()
-    for line in Path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = line.split(maxsplit=5)
-        if len(parts) == 6 and "youtubecast.py" in parts[5]:
-            cron_expr = " ".join(parts[:5])
-            try:
-                cron = croniter.croniter(cron_expr, now)
-                next_run = cron.get_next(datetime)
-                log(f"[NEXT SCHEDULE] Next run at: {next_run:%Y-%m-%d %H:%M:%S} (cron: '{cron_expr}')")
-            except Exception as e:
-                log(f"[NEXT SCHEDULE] Failed to parse cron '{cron_expr}': {e}")
+    try:
+        cron = croniter.croniter(crontab_path, datetime.now())
+        next_run = cron.get_next(datetime)
+        log(f"[NEXT SCHEDULE] Next run at: {next_run}")
+    except Exception as e:
+        log(f"[NEXT SCHEDULE] Failed to parse cron '{cron_expr}': {e}")
 
 def is_playlist(url):
     return "playlist?list=" in url
