@@ -43,7 +43,7 @@ def log(msg):
 
 def log_next_schedule(crontab_path="/etc/crontabs/root"):
     now = datetime.now()
-    for line in path.read_text().splitlines():
+    for line in Path.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
