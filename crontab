@@ -1,0 +1,4 @@
+# check sources at 9pm
+* 21 * * * cd /app && python3 youtubecast.py > /proc/1/fd/1 2>&1
+# update yt-dlp weekly (Mon 05:15)
+15 5 * * 1 pip install -q --upgrade yt-dlp > /proc/1/fd/1 2>&1
