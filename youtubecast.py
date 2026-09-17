@@ -43,6 +43,8 @@ def log(msg):
 
 def log_next_schedule(crontab_path="/etc/crontabs/root"):
     now = datetime.now()
+    earliest_time = None
+    earliest_command = None
     with open(crontab_path, 'r', encoding='utf-8') as file:
         for line_num, line in enumerate(file, 1):
             line = line.strip()
