@@ -21,7 +21,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import yt_dlp
-from croniter import croniter
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 
@@ -40,39 +39,6 @@ MIME_TYPES = {
 
 def log(msg):
     print(f"{datetime.now():%Y-%m-%d %H:%M:%S} {msg}", flush=True)
-
-def get_next_schedule(crontab_path="/etc/crontabs/root"):
-    now = datetime.now()
-    earliest_time = None
-    earliest_command = None
-    with open(crontab_path, 'r', encoding='utf-8') as file:
-        for line_num, line in enumerate(file, 1):
-            line = line.strip()
-            
-            # 빈 줄이나 주석(#), 환경변수 설정(ENV=...) 제외
-            if not line or line.startswith('#') or '=' in line.split()[0]:
-                continue
-            
-            parts = line.split()
-            
-            # 일반적인 5자리 크론 표현식 (분 시 일 월 요일)
-            if len(parts) >= 6:
-                cron_expr = " ".join(parts[:5])
-                command = " ".join(parts[5:])
-                
-                # 크론 표현식 유효성 검사
-                if croniter.is_valid(cron_expr):
-                    cron = croniter(cron_expr, now)
-                    next_run = cron.get_next(datetime)
-                    if earliest_time is None or next_run < earliest_time:
-                        earliest_time = next_run
-                        earliest_command = command
-                else:
-                    log(f"wrong cron expression: {cron_expr}")
-    if earliest_time and earliest_command:
-        log(f"next scheduled job: {earliest_time.strftime('%Y-%m-%d %H:%M:%S')}, COMMAND: {earliest_command}")
-    else:
-        log(f"no valid scheduled jobs found")
 
 def is_playlist(url):
     return "playlist?list=" in url
@@ -289,8 +255,6 @@ def main():
         except Exception as e:
             failures += 1
             log(f"[{podcast['folder']}] ERROR: {type(e).__name__}: {e}")
-
-    get_next_schedule()
 
     log("job finished, exiting the instance")
 

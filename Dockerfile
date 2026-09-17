@@ -4,7 +4,7 @@ WORKDIR /app
 
 #INSTALL DEPENDENCIES
 RUN apk add --no-cache ffmpeg tini && \
-    pip install --no-cache-dir yt-dlp croniter
+    pip install --no-cache-dir yt-dlp
 
 #CLONE REPOSITORY
 ADD https://api.github.com/repos/lonelyhero77/youtubecast/git/refs/heads/main /version.json
