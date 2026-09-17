@@ -89,7 +89,7 @@ def list_entries(url):
     """Flat-extract video entries without downloading. Returns [] of dicts with at least 'id'."""
     opts = {
         "extract_flat": "in_playlist",
-        "quiet": False,
+        "quiet": True,
         "no_warnings": True,
     }
     if not is_playlist(url):
@@ -137,11 +137,11 @@ def download_episode(folder, video_id, lang=None, pubdate="upload"):
     opts = {
         "format": "bestaudio[ext=m4a]/bestaudio",
         "outtmpl": str(folder / "%(id)s.%(ext)s"),
-        "writethumbnail": True,
+        "writethumbnail": False,
         "postprocessors": [{"key": "FFmpegThumbnailsConvertor", "format": "jpg"}],
-        "quiet": False,
+        "quiet": True,
         "no_warnings": True,
-        "noprogress": False,
+        "noprogress": True,
     }
     if lang:
         opts["extractor_args"] = {"youtube": {"lang": [lang]}}
