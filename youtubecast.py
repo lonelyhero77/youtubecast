@@ -98,12 +98,12 @@ def save_episodes(folder, episodes):
     )
 
 
-def download_episode(folder, video_id, lang=None, pubdate="upload"):
+def download_episode(folder, video_id, lang=None, thumbnail=False, pubdate="upload"):
     """Download audio + thumbnail for one video. Returns an episode dict."""
     opts = {
         "format": "bestaudio[ext=m4a]/bestaudio",
         "outtmpl": str(folder / "%(id)s.%(ext)s"),
-        "writethumbnail": True,
+        "writethumbnail": thumbnail,
         "postprocessors": [{"key": "FFmpegThumbnailsConvertor", "format": "jpg"}],
         "quiet": False,
         "no_warnings": True,
@@ -221,6 +221,7 @@ def process_podcast(podcast, config):
             log(f"[{podcast['folder']}] downloading {entry['id']}")
             ep = download_episode(folder, entry["id"],
                                   podcast.get("lang", config.get("lang")),
+                                  podcast.get("thumbnail", config.get("thumbnail")),
                                   podcast.get("pubdate", config.get("pubdate", "upload")))
             episodes.append(ep)
             save_episodes(folder, episodes)
