@@ -141,10 +141,11 @@ def download_episode(folder, video_id, lang=None, thumbnail=False, pubdate="uplo
     }
 
 
-def write_feed(folder, podcast, base_url, episodes):
+def write_feed(folder, podcast, base_url, auth_token, episodes):
     ET.register_namespace("itunes", ITUNES_NS)
     ET.register_namespace("atom", ATOM_NS)
     podcast_url = base_url + podcast["folder"] + "/"
+    token = "?token=" + auth_token
 
     rss = ET.Element("rss", version="2.0")
     channel = ET.SubElement(rss, "channel")
@@ -158,8 +159,8 @@ def write_feed(folder, podcast, base_url, episodes):
     el(channel, "title", podcast["title"])
     el(channel, "link", podcast["url"])
     el(channel, "description", podcast["title"])
-    logo_url = base_url + podcast["folder"] + "_logo.jpg"
-    el(channel, f"{{{ATOM_NS}}}link", href=podcast_url + "channel.xml", rel="self", type="application/rss+xml")
+    logo_url = base_url + podcast["folder"] + "_logo.jpg" + token
+    el(channel, f"{{{ATOM_NS}}}link", href=podcast_url + "channel.xml" + token, rel="self", type="application/rss+xml")
     el(channel, f"{{{ITUNES_NS}}}image", href=logo_url)
     image = el(channel, "image")
     el(image, "url", logo_url)
@@ -232,7 +233,7 @@ def process_podcast(podcast, config):
             log(f"[{podcast['folder']}] FAILED {entry['id']}: {e}")
 
     if added or not (folder / "channel.xml").exists():
-        write_feed(folder, podcast, config["base_url"], episodes)
+        write_feed(folder, podcast, config["base_url"], config["auth_token"], episodes)
         log(f"[{podcast['folder']}] feed updated, {len(episodes)} episode(s)")
     log(f"[{podcast['folder']}] completed")
 
