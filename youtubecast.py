@@ -175,12 +175,12 @@ def write_feed(folder, podcast, base_url, auth_token, episodes):
         el(item, "guid", ep["id"], isPermaLink="false")
         el(item, "pubDate", email.utils.format_datetime(
             datetime.fromtimestamp(ep["timestamp"], tz=timezone.utc)))
-        el(item, "enclosure", url=podcast_url + ep["file"],
+        el(item, "enclosure", url=podcast_url + ep["file"] + token,
            type=ep["mime"], length=str(ep["filesize"]))
         if ep.get("duration"):
             el(item, f"{{{ITUNES_NS}}}duration", str(int(ep["duration"])))
         if ep.get("thumbnail"):
-            el(item, f"{{{ITUNES_NS}}}image", href=podcast_url + ep["thumbnail"])
+            el(item, f"{{{ITUNES_NS}}}image", href=podcast_url + ep["thumbnail"] + token)
 
     ET.indent(rss)
     ET.ElementTree(rss).write(folder / "channel.xml", encoding="utf-8", xml_declaration=True)
