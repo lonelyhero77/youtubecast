@@ -179,7 +179,7 @@ def write_feed(folder, podcast, base_url, auth_token, episodes):
            type=ep["mime"], length=str(ep["filesize"]))
         if ep.get("duration"):
             el(item, f"{{{ITUNES_NS}}}duration", str(int(ep["duration"])))
-        if ep.get("thumbnail"):
+        if ep.get("thumbnail") and (folder / ep["thumbnail"]).is_file():
             el(item, f"{{{ITUNES_NS}}}image", href=podcast_url + ep["thumbnail"] + token)
 
     ET.indent(rss)
