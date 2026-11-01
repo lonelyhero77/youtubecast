@@ -24,7 +24,7 @@ if [ "$PUID" -eq 0 ] || [ "$PGID" -eq 0 ]; then
 fi
 
 chown -R "$PUID:$PGID" /opt/venv
-chown "$PUID:$PGID" /app
+chown "$PUID:$PGID" /app    
 if [ -e /app/youtubecast.lock ]; then
     chown "$PUID:$PGID" /app/youtubecast.lock
 fi

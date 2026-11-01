@@ -143,12 +143,13 @@ apply newer releases.
 ### Nginx token allowlist
 
 Copy `nginx/tokens.map.example` to `nginx/tokens.map`, replace the example
-value, and add one quoted token mapping per line. `nginx/tokens.map` is ignored
-by Git:
+value, and add one quoted token mapping per line. Generate each token with
+`openssl rand -hex 16` (16 random bytes, 32 hex characters, 128 bits).
+`nginx/tokens.map` is ignored by Git:
 
 ```nginx
-"64-character-hex-token-one" 1;
-"64-character-hex-token-two" 1;
+"32-character-hex-token-one" 1;
+"32-character-hex-token-two" 1;
 ```
 
 The application-specific server config is in `nginx/conf.d/default.conf` and
