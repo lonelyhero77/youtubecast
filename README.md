@@ -28,6 +28,7 @@ Copy `config.example.toml` to `config.toml` next to the script and edit:
 ```toml
 base_url = "https://podcasts.example.com/"
 root     = "/home/youtubecast/podcasts"
+auth_token = ""
 backlog  = 1
 
 [[podcasts]]
@@ -44,15 +45,19 @@ backlog_order = "asc"
 pubdate       = "download"
 ```
 
-- `base_url` — public URL the webserver serves `root` at
+- `base_url` — public URL the webserver serves `root` at; include a trailing `/`
 - `root` — folder where podcast folders are created (webserver docroot)
-- `backlog` — how many latest videos to download when a source is added (default 1)
+- `auth_token` — required string appended as `?token=...` to generated feed and
+  media URLs. It does not enforce access control; configure that in your webserver
+- `backlog` — how many latest videos to download when a source is added (default
+  1); channel scans inspect up to the latest 100 videos
 - `[[podcasts]]` — one per source: `url` (channel or playlist), `title` (podcast
   name), `folder` (folder name under `root`)
 
 Optional, global or per-podcast (per-podcast wins):
 
 - `backlog` — per-source override
+- `thumbnail` — download and add video thumbnails to the feed (default `false`)
 - `backlog_order` — how the source lists its videos, used to pick the newest
   `backlog` videos on first run: `"desc"` (default) means newest first, so they
   are taken from the beginning; `"asc"` means oldest first, taken from the end.
@@ -88,7 +93,18 @@ youtubecast/
 
 New videos are detected as "not in `seen.txt`", i.e. new since last *download*,
 not last check — a failed download retries on the next run. Delete an ID from
-`seen.txt` (and its files) to re-download it.
+`seen.txt` (and its files) to re-download it. Channel root URLs are checked via
+their Videos tab, and live or upcoming videos are skipped.
+
+## Run manually
+
+Run all configured podcasts, or pass an exact `title` from `config.toml` to
+process only that podcast:
+
+```sh
+./venv/bin/python youtubecast.py
+./venv/bin/python youtubecast.py "Some Channel"
+```
 
 ## Cron
 
@@ -101,3 +117,28 @@ not last check — a failed download retries on the next run. Delete an ID from
 # project venv, so pip upgrades it in place
 15 5 * * 1 /path/to/youtubecast/venv/bin/pip install -q --upgrade yt-dlp >> /path/to/youtubecast/cron.log 2>&1
 ```
+
+## Docker
+
+The Compose service defaults to UID:GID `1000:1000`. Set `PUID` and `PGID` in
+the Compose `.env` file to match the user that should own downloaded files.
+Make sure the host `./podcasts` directory is writable by that UID:GID; the
+container does not change ownership of the bind-mounted directory. Set
+`root = "/app/podcasts"` in `config.toml` so generated files go into that mount.
+The container starts one check immediately and also follows the configured
+schedules.
+
+The container reads schedules from the repository's `crontab` file, mounted
+read-only at `/app/crontab`. Add one five-field cron line per task; commands run
+as `PUID:PGID`:
+
+```cron
+0 21 * * * cd /app && /opt/venv/bin/python /app/youtubecast.py
+15 5 * * 1 /opt/venv/bin/pip install -q --upgrade yt-dlp
+```
+
+Edit `crontab` to add or change tasks, then restart the container to
+load the updated schedule. A `yt-dlp` upgrade made inside the running container
+is reset when it is recreated from an older image. Supercronic is fetched at
+its latest version when the image is built; rebuild and redeploy the image to
+apply newer releases.

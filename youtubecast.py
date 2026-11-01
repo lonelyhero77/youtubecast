@@ -6,6 +6,7 @@ downloads audio + thumbnail with yt-dlp, and regenerates channel.xml
 (podcast RSS) in each podcast's folder. Designed to run from cron.
 """
 
+import argparse
 import email.utils
 import fcntl
 import json
@@ -239,6 +240,19 @@ def process_podcast(podcast, config):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("title", nargs="?", help="process only this podcast title")
+    args = parser.parse_args()
+
+    with open(SCRIPT_DIR / "config.toml", "rb") as f:
+        config = tomllib.load(f)
+
+    podcasts = config["podcasts"]
+    if args.title is not None:
+        podcasts = [podcast for podcast in podcasts if podcast["title"] == args.title]
+        if not podcasts:
+            parser.error(f"no podcast with title {args.title!r} found in config.toml")
+
     log("job starting")
     lock = open(SCRIPT_DIR / "youtubecast.lock", "w")
     try:
@@ -246,12 +260,9 @@ def main():
     except BlockingIOError:
         log("another instance is running, exiting")
         return 0
-    
-    with open(SCRIPT_DIR / "config.toml", "rb") as f:
-        config = tomllib.load(f)
 
     failures = 0
-    for podcast in config["podcasts"]:
+    for podcast in podcasts:
         try:
             process_podcast(podcast, config)
         except Exception as e:

@@ -1,10 +1,16 @@
+FROM golang:1.24-alpine AS supercronic-build
+
+RUN go install github.com/aptible/supercronic@latest
+
 FROM python:3.11-alpine
 
 WORKDIR /app
 
-#INSTALL DEPENDENCIES
-RUN apk add --no-cache ffmpeg tini && \
-    pip install --no-cache-dir yt-dlp
+RUN apk add --no-cache ffmpeg tini su-exec tzdata && \
+    python -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir yt-dlp
+
+COPY --from=supercronic-build /go/bin/supercronic /usr/local/bin/supercronic
 
 #CLONE REPOSITORY
 ADD https://api.github.com/repos/lonelyhero77/youtubecast/git/refs/heads/main /version.json
@@ -13,9 +19,10 @@ RUN apk add --no-cache --virtual .build-deps git && \
     rm -rf /app/.git && \
     apk del .build-deps
 
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+RUN chmod +x /usr/local/bin/docker-entrypoint
+
 #SET MOUNTPOINT
 VOLUME ["/app/podcasts"]
 
-#EXECUTE COMMANDS
-ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["sh", "-c", "cp /app/crontab /etc/crontabs/root && chmod 600 /etc/crontabs/root && python3 youtubecast.py & exec crond -f -l 2"]
+ENTRYPOINT ["/sbin/tini", "-g", "--", "/usr/local/bin/docker-entrypoint"]

@@ -4,7 +4,9 @@ services:
     container_name: youtubecast
     restart: unless-stopped
     environment:
-      - TZ=Asia/Seoul
+      TZ: Asia/Seoul
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
     volumes:
       - ./config.toml:/app/config.toml:ro
       - ./podcasts:/app/podcasts
