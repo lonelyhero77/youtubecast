@@ -12,14 +12,13 @@ services:
       - ./podcasts:/app/podcasts
       - ./crontab:/app/crontab:ro
 
-  # (선택 사항) 생성된 팟캐스트 피드 및 오디오 파일을 웹으로 호스팅할 웹서버
-  # web:
-  #   image: nginx:alpine
-  #   container_name: youtubecast-web
-  #   restart: unless-stopped
-  #   ports:
-  #     - "8081:8081"
-  #   volumes:
-  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./nginx/tokens.map:/etc/nginx/tokens.map:ro
-  #     - ./podcasts:/usr/share/nginx/podcasts:ro
+  nginx:
+    image: nginx:alpine
+    container_name: youtubecast-web
+    restart: unless-stopped
+    # ports:
+    #   - "8081:8081"
+    volumes:
+      - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/tokens.map:/etc/nginx/tokens.map:ro
+      - ./podcasts:/usr/share/nginx/podcasts:ro

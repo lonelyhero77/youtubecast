@@ -151,8 +151,9 @@ by Git:
 "64-character-hex-token-two" 1;
 ```
 
-The complete Nginx configuration is in `nginx/nginx.conf`. Its token map
-includes `/etc/nginx/tokens.map` in the `http` context:
+The application-specific server config is in `nginx/conf.d/default.conf` and
+is mounted over the image's default server config. Its token map includes
+`/etc/nginx/tokens.map` in the `http` context:
 
 ```nginx
 map $arg_token $is_valid_token {
@@ -170,15 +171,21 @@ sub_filter_once off;
 sub_filter '__REQUEST_TOKEN__' $arg_token;
 ```
 
-The optional `web` service in `docker-compose.yml` mounts the Nginx config,
-token map, and podcast directory. Enable it after creating `nginx/tokens.map`.
+Directory listing is disabled, so use the `channel.xml` URL or its direct media
+links rather than browsing folders. Requests for `episodes.json` and `seen.txt`
+return 404 even with a valid token.
+
+The `nginx` service in `docker-compose.yml` mounts this server config, the token
+map, and the podcast directory. Create `nginx/tokens.map` before starting it.
 The `ngx_http_sub_module` must be enabled in Nginx. Each feed response then
 contains only the token used to request that feed, and its audio and image URLs
 use the same token. All listed tokens still grant access to every podcast; to
 revoke one, remove its entry and reload Nginx. Old `channel.xml` files are
 regenerated with token markers on the next podcast check.
 
-The checked-in Nginx config uses `server_name _` and does not trust forwarded
-client IP headers. If deploying behind a reverse proxy, set the hostname and
-configure `set_real_ip_from` only for that proxy's trusted IP ranges; otherwise
-rate limiting may see the proxy address instead of each client address.
+The checked-in server config uses `server_name _` and does not trust forwarded
+client IP headers. Its access log records `$uri` without query arguments and
+omits the Referer, so the token is not written to this Nginx access log. Apply
+the same logging rule at any reverse proxy in front of it. If deploying behind
+a reverse proxy and needing the real client IP, configure `set_real_ip_from`
+only for that proxy's trusted IP ranges.
