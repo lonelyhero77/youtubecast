@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine AS supercronic-build
+FROM golang:alpine AS supercronic-build
 
 RUN go install github.com/aptible/supercronic@latest
 
