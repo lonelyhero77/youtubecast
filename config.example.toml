@@ -1,6 +1,5 @@
 base_url = "https://podcasts.example.com/"
 root     = "/home/youtubecast/podcasts"
-auth_token = ""
 backlog  = 1
 
 [[podcasts]]

@@ -4,3 +4,4 @@ cron.log
 venv/
 podcasts/
 config.toml
+nginx/tokens.map

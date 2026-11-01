@@ -28,7 +28,6 @@ Copy `config.example.toml` to `config.toml` next to the script and edit:
 ```toml
 base_url = "https://podcasts.example.com/"
 root     = "/home/youtubecast/podcasts"
-auth_token = ""
 backlog  = 1
 
 [[podcasts]]
@@ -47,8 +46,6 @@ pubdate       = "download"
 
 - `base_url` — public URL the webserver serves `root` at; include a trailing `/`
 - `root` — folder where podcast folders are created (webserver docroot)
-- `auth_token` — required string appended as `?token=...` to generated feed and
-  media URLs. It does not enforce access control; configure that in your webserver
 - `backlog` — how many latest videos to download when a source is added (default
   1); channel scans inspect up to the latest 100 videos
 - `[[podcasts]]` — one per source: `url` (channel or playlist), `title` (podcast
@@ -142,3 +139,46 @@ load the updated schedule. A `yt-dlp` upgrade made inside the running container
 is reset when it is recreated from an older image. Supercronic is fetched at
 its latest version when the image is built; rebuild and redeploy the image to
 apply newer releases.
+
+### Nginx token allowlist
+
+Copy `nginx/tokens.map.example` to `nginx/tokens.map`, replace the example
+value, and add one quoted token mapping per line. `nginx/tokens.map` is ignored
+by Git:
+
+```nginx
+"64-character-hex-token-one" 1;
+"64-character-hex-token-two" 1;
+```
+
+The complete Nginx configuration is in `nginx/nginx.conf`. Its token map
+includes `/etc/nginx/tokens.map` in the `http` context:
+
+```nginx
+map $arg_token $is_valid_token {
+  default 0;
+  include /etc/nginx/tokens.map;
+}
+```
+
+In the protected `location`, substitute each feed's token marker with the
+requesting token:
+
+```nginx
+sub_filter_types application/rss+xml application/xml text/xml;
+sub_filter_once off;
+sub_filter '__REQUEST_TOKEN__' $arg_token;
+```
+
+The optional `web` service in `docker-compose.yml` mounts the Nginx config,
+token map, and podcast directory. Enable it after creating `nginx/tokens.map`.
+The `ngx_http_sub_module` must be enabled in Nginx. Each feed response then
+contains only the token used to request that feed, and its audio and image URLs
+use the same token. All listed tokens still grant access to every podcast; to
+revoke one, remove its entry and reload Nginx. Old `channel.xml` files are
+regenerated with token markers on the next podcast check.
+
+The checked-in Nginx config uses `server_name _` and does not trust forwarded
+client IP headers. If deploying behind a reverse proxy, set the hostname and
+configure `set_real_ip_from` only for that proxy's trusted IP ranges; otherwise
+rate limiting may see the proxy address instead of each client address.

@@ -1,0 +1,2 @@
+# Generate URL-safe values with: openssl rand -hex 32
+"replace-with-a-64-character-hex-token" 1;

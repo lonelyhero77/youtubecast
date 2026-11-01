@@ -24,6 +24,7 @@ from pathlib import Path
 import yt_dlp
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+FEED_TOKEN_MARKER = "__REQUEST_TOKEN__"
 
 ITUNES_NS = "http://www.itunes.com/dtds/podcast-1.0.dtd"
 ATOM_NS = "http://www.w3.org/2005/Atom"
@@ -142,11 +143,11 @@ def download_episode(folder, video_id, lang=None, thumbnail=False, pubdate="uplo
     }
 
 
-def write_feed(folder, podcast, base_url, auth_token, episodes):
+def write_feed(folder, podcast, base_url, episodes):
     ET.register_namespace("itunes", ITUNES_NS)
     ET.register_namespace("atom", ATOM_NS)
     podcast_url = base_url + podcast["folder"] + "/"
-    token = "?token=" + auth_token
+    token = "?token=" + FEED_TOKEN_MARKER
 
     rss = ET.Element("rss", version="2.0")
     channel = ET.SubElement(rss, "channel")
@@ -191,6 +192,10 @@ def process_podcast(podcast, config):
     log(f"[{podcast['folder']}] processing started")
     folder = Path(config["root"]) / podcast["folder"]
     folder.mkdir(parents=True, exist_ok=True)
+    feed_path = folder / "channel.xml"
+    if feed_path.exists() and FEED_TOKEN_MARKER not in feed_path.read_text(encoding="utf-8"):
+        write_feed(folder, podcast, config["base_url"], load_episodes(folder))
+        log(f"[{podcast['folder']}] feed token links refreshed")
     log(f"[{podcast['folder']}] loading episodes") 
     backlog = podcast.get("backlog", config.get("backlog", 1))
 
@@ -234,7 +239,7 @@ def process_podcast(podcast, config):
             log(f"[{podcast['folder']}] FAILED {entry['id']}: {e}")
 
     if added or not (folder / "channel.xml").exists():
-        write_feed(folder, podcast, config["base_url"], config["auth_token"], episodes)
+        write_feed(folder, podcast, config["base_url"], episodes)
         log(f"[{podcast['folder']}] feed updated, {len(episodes)} episode(s)")
     log(f"[{podcast['folder']}] completed")
 
