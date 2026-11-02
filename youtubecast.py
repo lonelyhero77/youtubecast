@@ -246,17 +246,17 @@ def process_podcast(podcast, config):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("title", nargs="?", help="process only this podcast title")
+    parser.add_argument("folder", nargs="?", help="process only this podcast folder")
     args = parser.parse_args()
 
     with open(SCRIPT_DIR / "config.toml", "rb") as f:
         config = tomllib.load(f)
 
     podcasts = config["podcasts"]
-    if args.title is not None:
-        podcasts = [podcast for podcast in podcasts if podcast["title"] == args.title]
+    if args.folder is not None:
+        podcasts = [podcast for podcast in podcasts if podcast["folder"] == args.folder]
         if not podcasts:
-            parser.error(f"no podcast with title {args.title!r} found in config.toml")
+            parser.error(f"no podcast with folder {args.folder!r} found in config.toml")
 
     log("job starting")
     lock = open(SCRIPT_DIR / "youtubecast.lock", "w")

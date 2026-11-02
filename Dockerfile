@@ -19,6 +19,8 @@ RUN apk add --no-cache --virtual .build-deps git && \
     rm -rf /app/.git && \
     apk del .build-deps
 
+COPY youtubecast.py /app/youtubecast.py
+
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chmod +x /usr/local/bin/docker-entrypoint
 

@@ -95,12 +95,12 @@ their Videos tab, and live or upcoming videos are skipped.
 
 ## Run manually
 
-Run all configured podcasts, or pass an exact `title` from `config.toml` to
-process only that podcast:
+Run all configured podcasts, or pass an exact `folder` value from
+`config.toml` to process only that podcast:
 
 ```sh
 ./venv/bin/python youtubecast.py
-./venv/bin/python youtubecast.py "Some Channel"
+./venv/bin/python youtubecast.py "some-channel"
 ```
 
 ## Cron
